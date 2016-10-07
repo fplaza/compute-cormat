@@ -6,8 +6,8 @@
 
 class BinaryMatrixReader
 {
-	public:
-		static Matrix read(const std::string& matrix_path);
+    public:
+        static Matrix read(const std::string& input_file);
 };
 
-#endif // BINARY_MATRIX_READER_HH
+#endif

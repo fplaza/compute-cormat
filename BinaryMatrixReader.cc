@@ -3,30 +3,34 @@
 #include <cstring>
 #include <stdexcept>
 
-Matrix BinaryMatrixReader::read(const std::string& matrix_path)
+Matrix BinaryMatrixReader::read(const std::string& input_file)
 {
-	std::ifstream ifs;
-	ifs.open(matrix_path.c_str());
+    std::ifstream ifs;
+    ifs.open(input_file.c_str());
 
-	char header[sizeof(Matrix::FILE_TYPE)-1];
-	ifs.read(header, sizeof(header));
+    char header[sizeof(Matrix::FILE_TYPE)-1];
+    ifs.read(header, sizeof(header));
 
-	if (std::memcmp(header, Matrix::FILE_TYPE, sizeof(header)) != 0)
-		throw std::invalid_argument(matrix_path + " is not a valid binary matrix file.");
+    if (std::memcmp(header, Matrix::FILE_TYPE, sizeof(header)) != 0)
+        throw std::invalid_argument(input_file + " is not a valid binary matrix file.");
 
-	uint64_t num_vars;
-	uint64_t num_obs;
+    // Read dimensions
+    boost::uint64_t num_vars;
+    boost::uint64_t num_obs;
+    ifs.read(reinterpret_cast<char*>(&num_vars), sizeof(boost::uint64_t));
+    ifs.read(reinterpret_cast<char*>(&num_obs), sizeof(boost::uint64_t));
 
-	ifs.read(reinterpret_cast<char*>(&num_vars), sizeof(uint64_t));
-	ifs.read(reinterpret_cast<char*>(&num_obs), sizeof(uint64_t));
+    // Allocate memory
+    Matrix mat(num_vars, num_obs);
 
-	Matrix mat(num_vars, num_obs);
+    // Read variables names
+    ifs.read(reinterpret_cast<char*>(mat.vars_names_), sizeof(boost::uint32_t)*mat.num_vars());
 
-	ifs.read(reinterpret_cast<char*>(mat.vars_ids_), sizeof(uint32_t)*mat.num_vars());
-	ifs.read(reinterpret_cast<char*>(mat.vars_data_), sizeof(double)*mat.num_vars()*mat.num_obs());
-	
-	ifs.close();
+    // Read matrix data
+    ifs.read(reinterpret_cast<char*>(mat.data_), sizeof(double)*mat.num_vars()*mat.num_obs());
 
-	return mat;
+    ifs.close();
+
+    return mat;
 }
 

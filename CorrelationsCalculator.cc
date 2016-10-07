@@ -1,20 +1,26 @@
 #include "CorrelationsCalculator.hh"
-#include <mkl.h>
+#include <omp.h>
+#include <cblas.h>
+#include <iostream>
+
+extern "C" void openblas_set_num_threads(int num_threads);
 
 void CorrelationsCalculator::run()
 {
-	Tile* tile;
-	while ((tile = tiles_to_compute_.dequeue()) != NULL)
-	{
-		cblas_dgemm(CblasRowMajor,
-				CblasNoTrans, CblasTrans,
-				tile->num_vars_x, tile->num_vars_y, tile->num_obs, 
-				1.0, tile->vars_x_data, tile->num_obs, 
-				tile->vars_y_data, tile->num_obs,
-				0.0, tile->cors, tile->num_vars_x);
-		
-		tiles_to_write_.enqueue(tile);
-	}
+    Block* block;
 
-	tiles_to_write_.enqueue(NULL);
+    openblas_set_num_threads(num_threads_);
+    while ((block = blocks_to_compute_.dequeue()) != NULL)
+    {
+        cblas_dgemm(CblasRowMajor,
+                CblasNoTrans, CblasTrans,
+                block->num_vars_x, block->num_vars_y, block->num_obs, 
+                1.0, block->vars_x_data, block->num_obs, 
+                block->vars_y_data, block->num_obs,
+                0.0, block->cors, block->num_vars_x);
+
+        blocks_to_write_.enqueue(block);
+    }
+
+    blocks_to_write_.enqueue(NULL);
 }
