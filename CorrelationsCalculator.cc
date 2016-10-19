@@ -17,7 +17,7 @@ void CorrelationsCalculator::run()
                 block->num_vars_x, block->num_vars_y, block->num_obs, 
                 1.0, block->vars_x_data, block->num_obs, 
                 block->vars_y_data, block->num_obs,
-                0.0, block->cors, block->num_vars_x);
+                0.0, block->cors, block->num_vars_y);
 
         blocks_to_write_.enqueue(block);
     }
